@@ -9,12 +9,19 @@ const generateToken = (id, role) => {
 
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, adminCode } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
         message: "Please provide all required fields"
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters"
       });
     }
 
@@ -26,11 +33,23 @@ export const register = async (req, res, next) => {
       });
     }
 
+    let userRole = "customer";
+    if (role === "admin") {
+      const validAdminCode = process.env.ADMIN_SECRET_CODE || "admin123";
+      if (!adminCode || adminCode !== validAdminCode) {
+        return res.status(403).json({
+          success: false,
+          message: "Invalid admin authorization code"
+        });
+      }
+      userRole = "admin";
+    }
+
     const user = await User.create({
       name,
       email,
       password,
-      role: role === "admin" ? "admin" : "customer"
+      role: userRole
     });
 
     const token = generateToken(user._id, user.role);

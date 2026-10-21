@@ -7,6 +7,7 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("customer");
+  const [adminCode, setAdminCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -19,14 +20,15 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const user = await register(name, email, password, role);
+      const user = await register(name, email, password, role, adminCode);
       if (user.role === "admin") {
         navigate("/admin/dashboard");
       } else {
         navigate("/tickets");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      const message = err.response?.data?.message || err.message || "Registration failed";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -83,6 +85,19 @@ const Register = () => {
             <option value="admin">Support Admin</option>
           </select>
         </div>
+        {role === "admin" && (
+          <div style={{ marginBottom: "1.5rem" }}>
+            <label style={{ display: "block", marginBottom: "0.25rem", fontWeight: "500" }}>Admin Authorization Code</label>
+            <input
+              type="password"
+              value={adminCode}
+              onChange={(e) => setAdminCode(e.target.value)}
+              required
+              placeholder="Enter admin code"
+              style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #d1d5db" }}
+            />
+          </div>
+        )}
         <button
           type="submit"
           disabled={loading}
